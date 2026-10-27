@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+app/
+app.new/
+graphify-out/
+samples/
+CLAUDE.local.md
