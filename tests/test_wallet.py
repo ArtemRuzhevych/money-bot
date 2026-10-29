@@ -137,3 +137,16 @@ def test_nothing_is_cleared_when_saving_fails():
 def test_empty_inbox_does_nothing():
     store = Store([])
     assert wallet.pull(store, FakeRates()) == (0, [])
+
+
+@pytest.mark.parametrize(
+    ("merchant", "expected"),
+    [
+        ("KauflandKauflandKaufland", "Kaufland"),
+        ("ALDI Sp. z o.o. 075ALDI Sp. z o.o. 075ALDI Sp. z o.o. 075", "ALDI Sp. z o.o. 075"),
+        ("Mama", "Mama"),
+        ("Bar Kawowy", "Bar Kawowy"),
+    ],
+)
+def test_repeated_merchant_names_collapse(merchant, expected):
+    assert wallet.to_row(item(merchant=merchant), FakeRates())["merchant"] == expected

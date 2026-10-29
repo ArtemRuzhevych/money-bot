@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import gspread
 import pytest
+from gspread.utils import numericise
 
 from money_bot import wallet
 from money_bot.receipts import Receipt
@@ -42,8 +43,12 @@ class FakeWorksheet:
     def delete_rows(self, start, end):
         del self.data[start - 1 : end]
 
-    def get_all_records(self):
+    def get_all_records(self, value_render_option=None):
         header, *body = self.data
+        if value_render_option != "UNFORMATTED_VALUE":  # like a Sheet in a comma-decimal locale
+            body = [
+                [numericise(str(v).replace(".", ",")) if isinstance(v, float) else v for v in r] for r in body
+            ]
         return [dict(zip(header, r, strict=False)) for r in body]
 
     def acell(self, label):
@@ -244,3 +249,11 @@ def test_inbox_tab_reads_and_clears_from_the_top():
     inbox.append_row(["t3", "Millennium", "Żabka", "5 zł", ""])  # arrives while the bot works
     store.clear_inbox(2)
     assert [r["merchant"] for r in store.inbox_rows()] == ["Żabka"]
+
+
+def test_amounts_read_back_exactly_in_a_comma_decimal_locale():
+    sheet = FakeSpreadsheet()
+    store = Store(sheet)
+    store.add({**tx("w1"), "amount": -39.55, "amount_pln": -39.55})
+
+    assert store.rows()[0]["amount_pln"] == -39.55  # not -3955

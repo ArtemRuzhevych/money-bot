@@ -39,13 +39,18 @@ class Store:
         self.inbox = self._tab(sheet, "inbox", wallet.INBOX_COLUMNS)
         # receipt_id -> (sheet row, record)
         self.receipt_rows = {
-            r["receipt_id"]: (i, r) for i, r in enumerate(self.receipts_tab.get_all_records(), 2)
+            r["receipt_id"]: (i, r) for i, r in enumerate(self._records(self.receipts_tab), 2)
         }
         self._rules: list[tuple[str, str]] | None = None
         self._rules_at = 0.0
         self.ids = set(self.tx.col_values(1)[1:])
         # key -> (value, sheet row); rows start at 2, under the header
-        self.kv = {r["key"]: (r["value"], i) for i, r in enumerate(self.state_tab.get_all_records(), 2)}
+        self.kv = {r["key"]: (r["value"], i) for i, r in enumerate(self._records(self.state_tab), 2)}
+
+    @staticmethod
+    def _records(ws) -> list[dict]:
+        # Raw numbers: displayed text in a comma-decimal locale ("-39,55") reads back as -3955 in gspread.
+        return ws.get_all_records(value_render_option="UNFORMATTED_VALUE")
 
     @classmethod
     def open(cls, service_account_file: str, sheet_id: str) -> "Store":
@@ -92,7 +97,7 @@ class Store:
 
     def rows(self) -> list[dict]:
         # shortcut: reads the whole tab per call; fine for a few thousand rows, cache it if /week gets slow.
-        return self.tx.get_all_records()
+        return self._records(self.tx)
 
     def weekly_limit(self) -> Decimal:
         value = self.budget.acell("B1").value
@@ -107,7 +112,7 @@ class Store:
     def rules(self) -> list[tuple[str, str]]:
         # Cached 5 min so a sync burst doesn't read the tab per row; Sheet edits show up within that.
         if self._rules is None or time.monotonic() - self._rules_at > 300:
-            self._rules = [(str(r["pattern"]), r["category"]) for r in self.rules_tab.get_all_records()]
+            self._rules = [(str(r["pattern"]), r["category"]) for r in self._records(self.rules_tab)]
             self._rules_at = time.monotonic()
         return self._rules
 
@@ -162,10 +167,10 @@ class Store:
         )
 
     def receipt_items(self) -> list[dict]:
-        return self.items_tab.get_all_records()
+        return self._records(self.items_tab)
 
     def inbox_rows(self) -> list[dict]:
-        return self.inbox.get_all_records()
+        return self._records(self.inbox)
 
     def clear_inbox(self, count: int) -> None:
         """Deletes the first `count` payments; the Apps Script only appends, so newer ones stay."""

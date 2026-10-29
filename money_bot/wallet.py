@@ -62,6 +62,7 @@ def to_row(item: dict, rates) -> dict:
     amount, currency = parse_amount(item.get("amount", ""))
     when = _when(item)
     card, merchant = str(item.get("card") or ""), str(item.get("merchant") or "?").strip()
+    merchant = re.sub(r"^(.{3,}?)\1+$", r"\1", merchant)  # iOS sometimes repeats the name: "AldiAldiAldi"
     key = f"{card}|{item.get('time') or item.get('received')}|{merchant}|{item.get('amount')}"
     return {
         "id": "wallet-" + hashlib.sha1(key.encode()).hexdigest()[:12],
