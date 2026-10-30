@@ -221,3 +221,23 @@ def test_claude_failure_gives_a_retry_hint():
     text, keyboard = desk.from_photo("f", FakeStore(), NOW)
     assert text.startswith("Couldn't read that receipt")
     assert keyboard is None
+
+
+def read_id(**extra):
+    return receipts.read(b"img", ".jpg", CATS, NOW.date(), ask=fake_ask({**BIEDRONKA, **extra})).id
+
+
+def test_two_receipts_with_same_shop_day_and_total_get_different_ids():
+    morning, afternoon = read_id(time="08:10", number="1234"), read_id(time="15:40", number="1302")
+    assert morning != afternoon
+    assert read_id(time="08:10", number="1234") == morning  # the same photo sent twice is still one receipt
+
+
+def test_receipt_without_time_or_number_keeps_the_old_id():
+    assert read_id() == read_id(time=None, number="")
+
+
+def test_prompt_asks_for_time_and_receipt_number():
+    seen: list = []
+    receipts.read(b"img", ".jpg", CATS, NOW.date(), ask=fake_ask(BIEDRONKA, seen))
+    assert '"time"' in seen[0][0] and '"number"' in seen[0][0]

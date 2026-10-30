@@ -150,3 +150,19 @@ def test_empty_inbox_does_nothing():
 )
 def test_repeated_merchant_names_collapse(merchant, expected):
     assert wallet.to_row(item(merchant=merchant), FakeRates())["merchant"] == expected
+
+
+class NoAedRates(FakeRates):
+    def to_pln(self, amount, code, day):
+        if code == "AED":
+            raise LookupError("no NBP rate for AED")
+        return super().to_pln(amount, code, day)
+
+
+def test_a_currency_nbp_does_not_list_is_reported_not_stuck():
+    store = Store([item(amount="AED 25.00", merchant="Dubai Mall"), item()])
+    added, bad = wallet.pull(store, NoAedRates())
+
+    assert added == 1
+    assert bad == ["Dubai Mall AED 25.00 (Millennium Visa)"]
+    assert store.inbox == []

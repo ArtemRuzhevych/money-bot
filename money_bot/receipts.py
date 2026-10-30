@@ -23,7 +23,8 @@ ITEM_COLUMNS = ["receipt_id", "item", "qty", "price", "category"]
 PROMPT = (
     "Read the receipt image {name} in this folder. It is most likely from Poland. "
     "Reply with only JSON, no prose: "
-    '{{"shop": str, "date": "YYYY-MM-DD", "currency": "ISO code", "total": number, '
+    '{{"shop": str, "date": "YYYY-MM-DD", "time": "HH:MM or null", '
+    '"number": "receipt number as printed, or null", "currency": "ISO code", "total": number, '
     '"items": [{{"name": str, "qty": number, "price": number, "category": str}}]}}. '
     "price is the line total after discounts; a discount on its own line is an item with a negative price. "
     "category must be one of {cats}. "
@@ -76,7 +77,11 @@ def read(image: bytes, suffix: str, cats: list[str], today: date, ask=claude.ask
         }
         for i in data.get("items", [])
     ]
-    digest = hashlib.sha1(f"{fold(shop)}|{day}|{total}".encode()).hexdigest()[:12]
+    key = f"{fold(shop)}|{day}|{total}"
+    printed = "|".join(str(data.get(k) or "").strip() for k in ("time", "number"))
+    if printed.strip("|"):  # two purchases at one shop for the same total differ only here
+        key += f"|{printed}"
+    digest = hashlib.sha1(key.encode()).hexdigest()[:12]
     return Receipt(f"rcpt-{digest}", day, shop, total, str(data.get("currency") or "PLN").upper(), items)
 
 

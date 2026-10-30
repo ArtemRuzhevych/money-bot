@@ -86,7 +86,7 @@ def pull(store, rates) -> tuple[int, list[str]]:
     for item in items:
         try:
             row = to_row(item, rates)
-        except ValueError:
+        except (ValueError, LookupError):  # LookupError: NBP has no rate for that currency
             log.warning("unreadable Wallet payment: %s", item)
             bad.append(f"{item.get('merchant') or '?'} {item.get('amount')} ({item.get('card') or '?'})")
             continue
