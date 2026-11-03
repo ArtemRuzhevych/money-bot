@@ -160,3 +160,8 @@ def test_ask_due_after_21_once_a_day():
     assert categories.ask_due(evening, StateStore("2026-10-27")) is False
     assert categories.ask_due(evening.replace(hour=20, minute=59), StateStore()) is False
     assert categories.ask_due(datetime(2026, 10, 28, 0, 30, tzinfo=TZ), StateStore("2026-10-27")) is False
+
+
+def test_starter_rules_sort_a_bakery_called_house_as_eating_out():
+    rules = categories.starter_rules()
+    assert categories.match("Piekarnia Gruzińska Tandyr House", rules) == "Eating out"

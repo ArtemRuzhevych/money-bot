@@ -39,7 +39,7 @@ STARTER = {
     ],
     "Eating out": [
         "mcdonald", "kfc", "burger king", "kebab", "pizza", "starbucks", "costa coffee",
-        "pyszne", "glovo", "wolt", "uber eats", "bolt food",
+        "pyszne", "glovo", "wolt", "uber eats", "bolt food", "piekarnia",
     ],
     "Transport": [
         "uber", "bolt", "freenow", "jakdojade", "mpk", "ztm", "pkp", "intercity", "koleo",
@@ -50,7 +50,7 @@ STARTER = {
     "Subscriptions": [
         "netflix", "spotify", "youtube", "anthropic", "claude.ai", "apple.com", "google", "disney",
     ],
-    "Clothes": ["zalando", "reserved", "sinsay", "cropp", "house", "h&m", "zara", "decathlon"],
+    "Clothes": ["zalando", "reserved", "sinsay", "cropp", "h&m", "zara", "decathlon"],
     "Fun": ["empik", "cinema city", "multikino", "helios", "steam", "playstation"],
 }  # fmt: skip
 log = logging.getLogger(__name__)
